@@ -1,0 +1,86 @@
+```html
+<!-- templates/index.html -->
+<!-- This is the HTML file for your application's user interface. -->
+<!-- It uses Tailwind CSS for styling and JavaScript to interact with the backend. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toxic Comment Detector</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Toxic Comment Detector</h1>
+        <p class="text-gray-600 mb-6">
+            Enter a comment below to check if it contains toxic language.
+        </p>
+        
+        <textarea id="commentInput"
+                  class="w-full h-32 p-4 mb-6 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition duration-300 resize-none"
+                  placeholder="Type your comment here..."></textarea>
+        
+        <button id="predictButton"
+                class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition duration-300 shadow-md">
+            Check Comment
+        </button>
+        
+        <div id="resultBox" class="mt-8 p-6 text-xl font-bold rounded-lg shadow-inner border-2 border-dashed border-gray-400 min-h-[6rem] flex items-center justify-center">
+            The result will appear here.
+        </div>
+    </div>
+
+    <script>
+        const commentInput = document.getElementById('commentInput');
+        const predictButton = document.getElementById('predictButton');
+        const resultBox = document.getElementById('resultBox');
+
+        predictButton.addEventListener('click', async () => {
+            const comment = commentInput.value;
+            if (!comment) {
+                resultBox.textContent = "Please enter a comment to analyze.";
+                resultBox.className = "mt-8 p-6 text-xl font-bold rounded-lg shadow-inner bg-yellow-100 text-yellow-800 border-yellow-400";
+                return;
+            }
+
+            resultBox.textContent = "Analyzing...";
+            resultBox.className = "mt-8 p-6 text-xl font-bold rounded-lg shadow-inner bg-blue-100 text-blue-800 border-blue-400";
+
+            try {
+                // Send the comment to the Flask backend
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ comment: comment }),
+                });
+
+                const data = await response.json();
+                const result = data.result;
+
+                // Update the UI with the prediction result
+                if (result === "Toxic") {
+                    resultBox.textContent = `Prediction: ${result}`;
+                    resultBox.className = "mt-8 p-6 text-xl font-bold rounded-lg shadow-inner bg-red-100 text-red-800 border-red-400";
+                } else {
+                    resultBox.textContent = `Prediction: ${result}`;
+                    resultBox.className = "mt-8 p-6 text-xl font-bold rounded-lg shadow-inner bg-green-100 text-green-800 border-green-400";
+                }
+                
+            } catch (error) {
+                console.error("Error during prediction:", error);
+                resultBox.textContent = "An error occurred. Please try again.";
+                resultBox.className = "mt-8 p-6 text-xl font-bold rounded-lg shadow-inner bg-red-100 text-red-800 border-red-400";
+            }
+        });
+    </script>
+</body>
+</html>
